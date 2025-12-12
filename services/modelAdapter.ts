@@ -7,6 +7,14 @@ import { Finding, Evidence, ReportFile } from '../types';
  * Handles interaction with Google Gemini 2.5 Flash for multimodal medical analysis.
  */
 
+// ---------------------------------------------------------------------------
+// 🔒 SECURITY CONFIGURATION
+// ---------------------------------------------------------------------------
+// PASTE YOUR API KEY INSIDE THE QUOTES BELOW TO FIX IT PERMANENTLY.
+// This allows the app to work without entering the key in the UI.
+const FIXED_API_KEY: string = "AIzaSyCgLadU1adWQOx1Pl03DbXjtY-sWX4jrYc"; // 🔴 PASTE YOUR API KEY HERE (e.g., "AIzaSy...")
+// ---------------------------------------------------------------------------
+
 const SYSTEM_INSTRUCTION = `
 You are MedLens AI — a medical explainability system. You DO NOT diagnose. 
 Your job is to analyze medical images and documents and explain them at three different understanding levels.
@@ -90,19 +98,23 @@ export interface AnalysisResult {
 
 // Robust API Key Retrieval
 export const getApiKey = (): string => {
-    // 1. Try LocalStorage (User entered via Admin Panel) - Highest Priority for Netlify
+    // 1. Hardcoded Fixed Key (Highest Priority for Permanent Fix)
+    if (FIXED_API_KEY && FIXED_API_KEY.length > 10) {
+        return FIXED_API_KEY;
+    }
+
+    // 2. Try LocalStorage (User entered via Admin Panel)
     const localKey = localStorage.getItem('MEDLENS_API_KEY');
     if (localKey && localKey.trim().length > 0) {
         return localKey.trim();
     }
 
-    // 2. Try Runtime Injection (window.MEDLENS_API_KEY)
+    // 3. Try Runtime Injection (window.MEDLENS_API_KEY)
     if ((window as any).MEDLENS_API_KEY) {
         return (window as any).MEDLENS_API_KEY;
     }
 
-    // 3. Try Environment Variable (Build time)
-    // We wrap this in a try-catch because referencing process in some browser environments can throw
+    // 4. Try Environment Variable (Build time)
     try {
         if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
             return process.env.API_KEY;
@@ -113,6 +125,11 @@ export const getApiKey = (): string => {
 
     return '';
 };
+
+// Check if the key is coming from the fixed constant (for UI display purposes)
+export const isFixedKeyConfigured = (): boolean => {
+    return !!(FIXED_API_KEY && FIXED_API_KEY.length > 10);
+}
 
 export const analyzeMedicalImage = async (file: ReportFile, language: string = 'English'): Promise<AnalysisResult> => {
   console.log(`[MedLens ML] Analyzing file: ${file.name} in ${language}`);

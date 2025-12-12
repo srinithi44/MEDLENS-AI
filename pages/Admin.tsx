@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../store';
 import { AuditLog } from '../types';
+import { getApiKey, isFixedKeyConfigured } from '../services/modelAdapter';
 
 export const Admin: React.FC = () => {
   const { auditLogs } = useStore();
@@ -8,16 +9,18 @@ export const Admin: React.FC = () => {
 
   // API Key State
   const [apiKey, setApiKey] = useState('');
-  const [showKey, setShowKey] = useState(false);
   const [keySaved, setKeySaved] = useState(false);
   const [hasExistingKey, setHasExistingKey] = useState(false);
+  
+  const isFixed = isFixedKeyConfigured();
 
   useEffect(() => {
-    // Load existing key from localStorage on mount
-    const savedKey = localStorage.getItem('MEDLENS_API_KEY');
-    if (savedKey) {
-        setApiKey(savedKey);
+    // Check if we have a key (either fixed or local)
+    const key = getApiKey();
+    if (key) {
         setHasExistingKey(true);
+        // If it's a local storage key, we can show it (masked) if we wanted to, 
+        // but for security we'll leave the input blank unless they type new.
     }
   }, []);
 
@@ -167,49 +170,49 @@ export const Admin: React.FC = () => {
                         {hasExistingKey && (
                             <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
                                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                                Active Key Found
+                                {isFixed ? "System Configured (Secure)" : "Active Key Found"}
                             </span>
                         )}
                     </div>
-                    <p className="text-xs text-slate-500 mb-3">
-                        Enter your Google Gemini API Key below. It will be stored securely in your browser's local storage for this session.
-                    </p>
-                    <div className="flex gap-2">
-                        <input 
-                            type={showKey ? "text" : "password"} 
-                            value={apiKey} 
-                            onChange={(e) => setApiKey(e.target.value)}
-                            placeholder="Enter Gemini API Key (AIza...)"
-                            className="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-slate-800 focus:ring-2 focus:ring-primary/50 outline-none" 
-                        />
-                        <button 
-                            onClick={() => setShowKey(!showKey)}
-                            className="px-3 py-2 text-slate-500 border border-slate-300 rounded-lg hover:bg-slate-50"
-                            title={showKey ? "Hide" : "Show"}
-                        >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                {showKey ? (
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                                ) : (
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                )}
-                                {!showKey && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />}
-                            </svg>
-                        </button>
-                    </div>
-                    {keySaved && <p className="text-sm text-green-600 mt-2 font-medium">✓ Key updated successfully!</p>}
-                    {!hasExistingKey && !keySaved && (
-                        <p className="text-xs text-amber-600 mt-2">⚠️ No API Key found. Real AI analysis will be disabled.</p>
+                    
+                    {isFixed ? (
+                        <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-center">
+                            <p className="text-sm text-slate-600 font-medium">
+                                🔒 API Key is managed via deployment configuration.
+                            </p>
+                            <p className="text-xs text-slate-400 mt-1">
+                                No manual entry required. The key is fixed and hidden.
+                            </p>
+                        </div>
+                    ) : (
+                        <>
+                            <p className="text-xs text-slate-500 mb-3">
+                                Enter your Google Gemini API Key below. It will be stored securely in your browser's local storage for this session.
+                            </p>
+                            <div className="flex gap-2">
+                                <input 
+                                    type="password"
+                                    value={apiKey} 
+                                    onChange={(e) => setApiKey(e.target.value)}
+                                    placeholder="Enter Gemini API Key (AIza...)"
+                                    className="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-slate-800 focus:ring-2 focus:ring-primary/50 outline-none" 
+                                />
+                            </div>
+                            {keySaved && <p className="text-sm text-green-600 mt-2 font-medium">✓ Key updated successfully!</p>}
+                            {!hasExistingKey && !keySaved && (
+                                <p className="text-xs text-amber-600 mt-2">⚠️ No API Key found. Real AI analysis will be disabled.</p>
+                            )}
+                            
+                            <div className="flex justify-end pt-4">
+                                <button 
+                                    onClick={handleSaveKey}
+                                    className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-sky-600 font-medium shadow-sm transition-all"
+                                >
+                                    Save Configuration
+                                </button>
+                            </div>
+                        </>
                     )}
-                </div>
-
-                <div className="flex justify-end pt-4">
-                    <button 
-                        onClick={handleSaveKey}
-                        className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-sky-600 font-medium shadow-sm transition-all"
-                    >
-                        Save Configuration
-                    </button>
                 </div>
             </div>
           </div>
