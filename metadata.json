@@ -1,0 +1,7 @@
+{
+  "name": " MedLens",
+  "description": "A secure, accessible, and explainable medical-report assistant that extracts findings from images and PDFs using AI.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
