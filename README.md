@@ -3,6 +3,10 @@
 ## Overview
 MedLens is a production-ready, full-stack medical assistant designed to reduce clinician burnout and diagnostic errors. It ingests medical images (X-ray, CT, Derm) and PDFs, using a multimodal AI pipeline to extract structured findings with **explainability** at its core.
 
+
+GOOGLE AI STUDIO LINK 
+https://aistudio.google.com/app/prompts?state=%7B%22ids%22:%5B%221mM-zTOEtbzc95_GdSiTXQgsi_pNc1LyP%22%5D,%22action%22:%22open%22,%22userId%22:%22101120196770750484564%22,%22resourceKeys%22:%7B%7D%7D&usp=sharing
+
 ## Architecture
 
 ```mermaid
